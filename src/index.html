@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rater</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+    <h1 id="title">Album Data</h1>
+    <br>
+
+    <div id="mainLayout">
+    <section class="searchSection">
+        <span style="font-size:0.8rem">Search by </span>
+        <b><button id="searchToggleBtn-Title">Title</button></b>
+        <b><button id="searchToggleBtn-ID">Release ID</button></b>
+        <div>
+            <span id="inputType">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search for an album..." />
+            </span>
+        <button id="albumSearchBtn">Search</button>
+        </div>
+
+        <div id="resultsContainer">
+        <ul id="results"></ul>
+        </div>
+
+        <span id="hiddenButtons"></span>
+    </section>
+
+    <section class="albumInfo">
+        <div id="detail"></div>
+        <div id="createPageBtnDiv"></div>
+        <div id="tracklistPreview"></div>
+    </section>
+
+    <div id="hiddenLoadAlbum"></div>
+
+    </div>
+
+    <div>
+    <ul id="goToOtherPages"></ul>
+    </div>
+    <script src="getalbuminfo.js"></script>
+</body>
+</html>
