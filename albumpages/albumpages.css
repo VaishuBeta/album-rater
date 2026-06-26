@@ -21,6 +21,11 @@
     -ms-overflow-style: none; 
 }
 
+:root {
+    --darkAccentColor: #464500;
+    --tracklistNumColor: #bebb00;
+}
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -42,11 +47,51 @@ body {
     color: white;
 }
 
-div#mainLayout {
+@keyframes pageEnter {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        display: none;
+    }
+}
+
+#blackScreenforTransition {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #111111;
+    z-index: 9999;
+    animation: pageEnter 0.7s cubic-bezier(0.2, 1, 0.4, 1) forwards;
+}
+
+
+#topBanner {
+    height: 40px;
+    color: white;
+    background-color: #ffffff60;
+}
+
+#pageTab {
+    display: inline-block;
+    width: fit-content;
+    height: 100%;
+    overflow-x: scroll;
+    background-color: #00000050;
+    border-radius: 5px;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+}
+
+#mainLayout {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: 2rem;
 }
 
 /*OVERALL POSITIONING ^^^^^*/
@@ -55,17 +100,18 @@ div#mainLayout {
     padding: 1rem;
     padding-top: 3rem;
     /*justify-content: center;*/
-    width: 30%;
+    width: 25%;
     background-color: #5b5b5b;
     flex-shrink: 0;
     min-height: 100dvh;
+    min-width: 200px;
 }
 
 #tracklistContainer {
     padding: 5px;
     align-items: center;
+    margin-top: 1rem;
     flex: 1;
-    margin-top: 5%;
 }
 
 h2 {
@@ -77,6 +123,14 @@ h1 {
     font-size: 3rem;
 }
 
+.tracklist-title {
+    font-size: 1.7rem;
+    color: var(--tracklistNumColor);
+    margin-bottom: 40px;
+    font-weight: bold;
+    font-family: jetbrains;
+}
+
 #tracklist {
     font-size: 1rem;
     border-collapse: separate;
@@ -85,31 +139,28 @@ h1 {
 
 .table-number {
     font-family: jetbrains;
-    color: #efeb0775;
+    color: var(--tracklistNumColor);
     width: 1.5rem;
     padding: 5px 0px;
-
-    border-bottom: 1px solid #ffffff10;
+    padding-right: 3px;
+    text-align: right;
 }
 
 .table-title {
-    width: 20dvw;
+    width: 30%;
     padding: 5px 0px;
-
-    border-bottom: 1px solid #ffffff10;
 }
 
 .table-rating {
-    padding: 5px 10px;
-
-    border-bottom: 1px solid #ffffff10;
+    padding: 5px 15px;
+    text-align: center;
 }
 
 .table-rating-inside {
     width: 2rem;
     color:black;
     font-weight: bold;
-    background-color: #efeb07;
+    background-color: var(--tracklistNumColor);
     border-radius: 7px;
     padding: 0.2rem 0.7rem;
     text-align: center;
@@ -120,22 +171,30 @@ h1 {
     font-weight: light;
     color: #cdcdcd;
     padding: 5px 0px;
-    width: 50%;
+    width: 70%;
+}
 
-    border-bottom: 1px solid #ffffff10;
+.table-comments-input {
+    background-color: #ffffff00;
+    border: none;
+    font-weight: light;
+    color: #cdcdcd;
+    font-size: 1rem;
+    field-sizing: fixed;
+    width: 100%;
 }
 
 /*TITLES AND INPUT INFO vvvvvvvvv*/
 
 #title {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: bold;
     text-align: center;
     width: 100%
 }
 
 input#titleInput {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: bold;
     background-color: #ffffff00;
     border: none;
@@ -151,10 +210,8 @@ input#titleInput:hover {
 
 
 span#artist {
-    display: inline-block;
+    /*display: inline-block;*/
     font-size: 1.2rem;
-    width: 40%;
-    max-height: 1.5rem;
     overflow-x: scroll;
     overflow-y: hidden;
     text-align: right;
@@ -167,7 +224,10 @@ input#artistInput {
     color: #ffffff;
     overflow-x: scroll;
     text-align: right;
-    width: 100%;
+    max-width: 40%;
+    min-width: 10%;
+    field-sizing: content;
+    
     
 }
 
@@ -177,13 +237,11 @@ input#artistInput:hover {
 
 
 span#year {
-    display: inline-block;
+    /*display: inline-block;*/
     font-size: 1.2rem;
-    width: 40%;
     overflow-x: scroll;
     overflow-y: hidden;
     text-align: left;
-    max-height: 1.5rem;
     
 }
 
@@ -194,8 +252,25 @@ input#yearInput {
     color: #ffffff;
     overflow-x: scroll;
     text-align: left;
-    width: 100%;
+    max-width: 40%;
+    min-width: 10%;
+    field-sizing: content;
     
+}
+
+input#titleInput::placeholder {
+  color: #ffffff;
+  opacity: 0.7;
+}
+
+input#yearInput::placeholder {
+  color: #ffffff;
+  opacity: 0.7;
+}
+
+input#artistInput::placeholder {
+  color: #ffffff;
+  opacity: 0.7;
 }
 
 input#yearInput:hover {
@@ -203,18 +278,21 @@ input#yearInput:hover {
 }
 
 #coverContainer {
-    width: 100%;
+    width: 90%;
     margin-left: auto;
     margin-right: auto;
     justify-content: center;
+    background-color: #11111150;
+    aspect-ratio: 1/1;
+    filter: drop-shadow(0px 2px 12px rgba(0, 0, 0, 0.2));
 }
 
 #cover {
     display: block;
-    margin-left: auto;
-    margin-right: auto;
-    border-radius: 4px;
-    filter: drop-shadow(0px 2px 12px rgba(0, 0, 0, 0.2));
+    margin-left: none;
+    margin-right: none;
+    width:100%;
+    border-radius: 5px;
 }
 
 #artist-and-year {
@@ -241,17 +319,68 @@ input#yearInput:hover {
     border-radius: 6px;
     position: relative;
     top: 0;
-    border-width: 2px;
+    border-width: 4px;
+    border-style: solid;
     width: 6rem;
+    border-color: var(--darkAccentColor);
+    filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.2));
 }
 
 #editBtn {
-    color: yellow;
+    color: var(--darkAccentColor);
     background-color: #ffffff00;
-    border-color: #efeb07;
+    filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.2));
+
 }
 
 #saveEditsBtn {
-    color: black;
-    background-color: #efeb07;
+    color: white;
+    background-color: var(--darkAccentColor);
+}
+
+/* COLOR PALETTE DIV vvvvvvvvv */
+
+#paletteColorButton {
+    width: 30px;
+    height: 30px;
+    margin: 0px 5px;
+    border-radius: 5px;
+    border-style: solid;
+    border-color: #ffffff20;
+    border-width: 2px;
+    filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.1));
+    cursor: pointer;
+}
+
+#paletteContainerMaster
+{
+    width: 70%;
+    padding: 10px 5px;
+    background-color: #00000030;
+    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.1));
+    border-radius: 5px;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#changePaletteContainer {
+    padding: 10px 5px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#changeSelectedColorForPaletteBtn {
+    background-color: #ffffff00;
+    border: none;
+    cursor: pointer;
+}
+
+#changeSelectedColorForPaletteLabel {
+    color: var(--tracklistNumColor);
+    font-weight: bold;
+}
+
+#switchIcon {
+    fill: var(--tracklistNumColor);
 }

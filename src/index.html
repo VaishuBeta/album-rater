@@ -41,8 +41,28 @@
     </div>
 
     <div>
-    <ul id="goToOtherPages"></ul>
+    <ul id="albumList"></ul>
     </div>
     <script src="getalbuminfo.js"></script>
+
+    <div id="albumInfoForm">
+        <div id="albumInfoFormCoverContainer">
+            <img src="" style="width: 100%; border-radius:5px;" id="miniCover">
+        </div>
+        <div>
+        <form>
+            <p style="font-size: 0.75rem; color:#800000; display: block" id="errorMessage"></p>
+            <span id="subtle" style="font-size: 1.25rem">.../</span><input type="text" placeholder="page name" id="sanitizedTitleInput" class="create-page-inputs"><span id="subtle" style="font-size: 1.25rem">.page</span>
+            <br>
+            <br>
+            <input type="text" placeholder="Album Title" id="titleInput" class="create-page-inputs">
+            <br>
+            <input type="text" placeholder="Artist" id="artistInput" class="create-page-inputs"> • <input type="number" placeholder="Year" id="yearInput" class="create-page-inputs">
+            <br>
+            <button id="createPageAfterValidationBtn">Confirm</button>
+        </form>
+        </div>
+
+    </div>
 </body>
 </html>

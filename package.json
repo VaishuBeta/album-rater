@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "colorthief": "^3.3.1",
+    "fast-average-color": "^9.5.2",
     "sharp": "^0.35.0"
   }
 }

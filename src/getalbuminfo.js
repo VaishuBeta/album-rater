@@ -6,6 +6,8 @@ console.log("Hello World!");
     "User-Agent": "VBAlbumRater/1.0"
 };*/
 
+window.searchType = "Title";
+
 
 async function changeSearchType(type) {
     const searchInput = document.getElementById("searchInput");
@@ -51,7 +53,7 @@ async function searchAlbum() {
         const data = await response.json();
 
             if (window.searchType === "ID") {
-                console.log("Search type is ID, showing details directly.");
+                document.getElementById("results").innerHTML = '';
                 showDetail(data);
                 return;
             }
@@ -180,14 +182,30 @@ async function createAlbumPage(release, artist, year, tracks)
     album_content_el.value = "";*/
     const title = release.title
     
+    /*
     const tracklistHTML = tracks.map(t => {
         return `<li>${t.title}</li>`;
     }).join("");
+    */
 
     //Refer to LINE 131 in ShowDetail function on how to get the cover.
     //"${COVER_URL}/${release.id}/front"
-    cover = "https://coverartarchive.org/release/" + release.id + "/front";
-    const albuminfo = {
+    //cover = "https://coverartarchive.org/release/" + release.id + "/front";
+    
+    //ik the try/catch is redundant but idc
+    try {
+    const coverResponse = await fetch(`${COVER_URL}/${release.id}/front`);
+        if (coverResponse.ok) {
+            cover = "https://coverartarchive.org/release/" + release.id + "/front";
+        } else {
+            cover = "../../assets/no cover found.png"
+        }
+    }
+    catch { cover = "../..assets/no cover found.png" }
+
+    const sanitizedTitle = title.replace(/[/\\:*?"<>|]/g, '-');
+    let albuminfo = {
+        sanitizedTitle,
         title,
         cover,
         artist,
@@ -195,16 +213,123 @@ async function createAlbumPage(release, artist, year, tracks)
         tracks
     };
 
-    otherpagesContainer = document.getElementById("goToOtherPages");
+    albuminfo = await askPageInfo(sanitizedTitle, title, artist, year, cover, tracks);
+
+    console.log(stringify(albuminfo));
+
+    //MAKE FORM TO VERIFY ALL INFO BEFORE CREATION
+    /*
+    formEl = document.createElement('form');
+    formEl.id = "verifyDataBeforeCreationForm";
+    titleInput = document.createElement('input');
+    artistInput = document.createElement('input');
+    titleInput = document.createElement('input');
+    */
+
+    //otherpagesContainer = document.getElementById("goToOtherPages");
     //otherpagesContainer.innerHTML = `<a href="../albumpages/html/closed captions.html">closed captions</a>`;
 
-    console.log("Creating album page. INFO: " + JSON.stringify(albuminfo));
-    api.createAlbumPage(albuminfo)
+    //console.log("Creating album page. INFO: " + JSON.stringify(albuminfo));
+    //api.createAlbumPage(albuminfo)
+    //loadAlbumList()
 
-    otherpagesContainer.innerHTML += `<li><a href="../albumpages/html/${title}.html">${title}</a></li>`;
+    //otherpagesContainer.innerHTML += `<li><a href="../albumpages/html/${title}.html">${title}</a></li>`;
 
     
 }
+
+async function loadAlbumList() {
+    const filesObj = await api.getAlbumPages();
+
+    albumList = document.getElementById("albumList");
+
+    //reset the list so there's no duplicates
+    albumList.innerHTML = '';
+
+    if (filesObj.length === 0) {
+        console.log("No files found in list. RETURNED.");
+        return;
+    }
+
+    filesObj.forEach(filePair => {
+        const itemCont = document.createElement('li');
+        const item = document.createElement('a');
+        
+        item.textContent = filePair.sanitizedTitle;
+        item.href = `../albumpages/html/${filePair.sanitizedTitle}`;
+        console.log("File found and added: " + filePair.title);
+
+        itemCont.appendChild(item);
+        albumList.appendChild(itemCont);
+
+    })
+}
+
+function askPageInfo(sanitizedTitle, title, artist, year, cover, tracks)
+{
+    const sanitizedTitleInput = document.getElementById("sanitizedTitleInput");
+    const titleInput = document.getElementById("titleInput");
+    const artistInput = document.getElementById("artistInput");
+    const yearInput = document.getElementById("yearInput");
+    const miniCover = document.getElementById("miniCover");
+    const errorMessage = document.getElementById("errorMessage");
+    const createPageAfterValidationBtn = document.getElementById("createPageAfterValidationBtn");
+
+    sanitizedTitleInput.value = sanitizedTitle;
+    titleInput.value = title;
+    artistInput.value = artist;
+    if (year != "Unknown Year") {yearInput.value = year;}
+    else {yearInput.value = '';}
+
+    document.getElementById("albumInfoForm").style.display = "flex";
+
+    miniCover.src = cover;
+
+    //check for special characters in sanitizedTitle, and set a flag to true if so.
+    sanitizedTitleInput.addEventListener('input', function() {
+        const currentValue = sanitizedTitleInput.value;
+        const specialCharRegex = /[^a-zA-Z0-9_ -]/;
+
+        if (specialCharRegex.test(currentValue)) {
+            errorMessage.textContent = "No special characters allowed in the filename.";
+        } else {
+            errorMessage.textContent = "";
+        }
+    })
+    //these lines came from claude
+    const oldBtn = document.getElementById("createPageAfterValidationBtn");
+    const newBtn = oldBtn.cloneNode(true);
+    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+
+
+    return new Promise((resolve) => {
+    newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            FsanitizedTitle = sanitizedTitleInput.value;
+            Ftitle = titleInput.value;
+            Fartist = artistInput.value;
+            Fyear = yearInput.value;
+            if (FsanitizedTitle && Ftitle && cover && Fartist && Fyear && Fartist)
+            {
+                albuminfo = {
+                    sanitizedTitle: FsanitizedTitle,
+                    title: Ftitle,
+                    cover: cover,
+                    artist: Fartist,
+                    year: Fyear,
+                    tracks: tracks };
+
+                console.log("Creating album page. INFO: " + JSON.stringify(albuminfo));
+                api.createAlbumPage(albuminfo);
+                loadAlbumList();
+                resolve(albuminfo);
+            }
+            else {console.log("Some information is missing in the album page."); resolve(albuminfo);}
+        });
+    });
+}
+
+loadAlbumList();
 
 document.getElementById("albumSearchBtn").addEventListener("click", searchAlbum);
 document.getElementById("searchToggleBtn-Title").addEventListener("click", () => changeSearchType("Title"));
