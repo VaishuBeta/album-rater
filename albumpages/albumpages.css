@@ -13,6 +13,17 @@
     src: url(../assets/JetBrainsMono-Regular.woff2)
 }
 
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 .no-scrollbar {
     /* Hide scrollbar for Firefox */
     scrollbar-width: none; 
@@ -21,14 +32,14 @@
     -ms-overflow-style: none; 
 }
 
-:root {
-    --darkAccentColor: #464500;
-    --tracklistNumColor: #bebb00;
-}
-
 /* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
+}
+
+:root {
+    --darkAccentColor: #4e4e4e;
+    --tracklistNumColor: #c0c0c0;
 }
 
 * {
@@ -57,6 +68,16 @@ body {
     }
 }
 
+@keyframes pageExit {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+        display: none;
+    }
+}
+
 #blackScreenforTransition {
     position: fixed;
     top: 0;
@@ -72,19 +93,59 @@ body {
 #topBanner {
     height: 40px;
     color: white;
-    background-color: #ffffff60;
+    background-color: #32323260;
+    overflow-x: scroll;
+    display: flex;
+    width: 100%;
+    flex-wrap: nowrap;
+    white-space: nowrap;
 }
 
-#pageTab {
-    display: inline-block;
+.pageTab {
+    display: inline-flex;
     width: fit-content;
     height: 100%;
-    overflow-x: scroll;
     background-color: #00000050;
-    border-radius: 5px;
-    padding: 10px;
+    /*border-radius: 8px 8px 0px 0px;*/
+    /*border-right: 1px;
+    border-color: #ffffff50;*/
+    padding: 2px 10px;
     text-align: center;
-    font-weight: bold;
+    font-weight: normal;
+    align-items: center;
+    color: white;
+    text-decoration: none;
+}
+
+.pageTabSearch {
+    display: inline-flex;
+    width: fit-content;
+    height: 100%;
+    background-color: #00000075;
+    /*border-radius: 8px 8px 0px 0px;*/
+    /*border-right: 1px;
+    border-color: #ffffff50;*/
+    padding: 2px 10px;
+    text-align: center;
+    font-weight: normal;
+    align-items: center;
+    color: white;
+    text-decoration: none;
+}
+
+.fakeBorder {
+  position: relative; /* Establishes a positioning context for the pseudo-element */
+  z-index: 999;
+}
+
+.fakeBorder::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 15%;            /* Positions the border away from the top edge */
+  height: 80%;         /* Sets the precise custom height of your "border" */
+  width: 1px;          /* Sets the border thickness */
+  background: #777777;    /* Sets the border color */
 }
 
 #mainLayout {
@@ -182,6 +243,17 @@ h1 {
     font-size: 1rem;
     field-sizing: fixed;
     width: 100%;
+}
+
+.table-ratings-input {
+    background-color: #ffffff00;
+    border: none;
+    font-weight: bold;
+    color: #000000;
+    font-size: 1rem;
+    field-sizing: fixed;
+    width: 1.7rem;
+    text-align: center;
 }
 
 /*TITLES AND INPUT INFO vvvvvvvvv*/

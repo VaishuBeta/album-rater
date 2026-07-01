@@ -17,19 +17,107 @@ const changeSelectedColorForPaletteBtn = document.getElementById("changeSelected
 const changeSelectedColorForPaletteLabel = document.getElementById("changeSelectedColorForPaletteLabel");
 const root = document.documentElement;
 
-let comments = {};
-document.querySelectorAll('.table-comments-input').forEach(input => {
-    const trackNum = input.dataset.track;
-    comments[trackNum] = input.value; // initialize with default
 
-    input.addEventListener('input', () => {
-        comments[trackNum] = input.value;
-        console.log(`Track ${trackNum} comment:`, comments[trackNum]);
-    });
-});
+async function loadAlbumList() {
+    const filesObj = await api.getAlbumPages();
+
+    const topBanner = document.getElementById("topBanner");
+
+    //reset the list so there's no duplicates
+    topBanner.innerHTML = `<a href="../../src/index.html" class="pageTabSearch"><svg xmlns="http://www.w3.org/2000/svg" height="1rem" viewBox="0 -960 960 960" width="1rem" fill="#FFFFFF"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg>  Search</a><span class="fakeBorder"></span>`;
+
+    //const fakeBorder = document.createElement('span');
+    //fakeBorder.classList.add("fakeBorder");
+
+    if (filesObj.length === 0) {
+        console.log("No files found in list. RETURNED.");
+        return;
+    }
+
+    filesObj.forEach(filePair => {
+        const item = document.createElement('a');
+        item.classList.add("pageTab")
+        
+        item.textContent = filePair.sanitizedTitle.replaceAll(".html", "");
+        item.href = `${filePair.sanitizedTitle}`;
+        console.log("File found and added: " + filePair.title);
+
+        const fakeBorder = document.createElement('span');
+        fakeBorder.classList.add("fakeBorder");
+
+        topBanner.appendChild(item);
+        topBanner.appendChild(fakeBorder);
+
+    })
+}
+
+loadAlbumList()
+
 
 //the html file name, like "album name.html"
 const pageId = window.location.pathname.split('/').pop();
+
+let comments = {};
+document.querySelectorAll('.table-comments-input').forEach(input => {
+    const trackNum = input.dataset.track;
+
+    //if already saved in local storage, load that; else: 
+    const saved = localStorage.getItem(`${pageId}_comment_${trackNum}`);
+    if (saved !== null) { input.value = saved; }
+    comments[trackNum] = input.value;
+
+    input.addEventListener('input', () => {
+        comments[trackNum] = input.value;
+        localStorage.setItem(`${pageId}_comment_${trackNum}`, input.value);
+    });
+});
+
+let songRatings = {};
+document.querySelectorAll('.table-ratings-input').forEach(input => {
+    const trackNum = input.dataset.track;
+
+    //if already saved in local storage, load that; else: 
+    const saved = localStorage.getItem(`${pageId}_rating_${trackNum}`);
+    if (saved !== null) { input.value = saved; }
+    songRatings[trackNum] = input.value;
+
+    let deleting = false;
+    input.addEventListener('keydown', (e) => {
+            deleting = e.key === 'Backspace' || e.key === 'Delete';
+        });
+
+    input.addEventListener('input', () => {
+        // Strip everything except digits
+        let digits = input.value.replace(/\D/g, '');
+
+        // Cap at 2 digits
+        if (digits.length > 2) digits = digits.slice(0, 2);
+
+        if (deleting) {
+            // Just show the raw digits while deleting, no autofill
+            input.value = digits.length === 2 ? digits[0] + '.' + digits[1] : digits;
+            return;
+        }
+
+        // Format as X.X
+        if (digits.length === 2) {
+            input.value = digits[0] + '.' + digits[1];
+        } else if (digits.length === 1) {
+            input.value = digits + '.0';
+            input.setSelectionRange(1, 1);
+        }
+        else {
+            input.value = digits;
+        }
+
+        // Cap at 10.0
+        if (parseFloat(input.value) > 10) {
+            input.value = '10.0';
+        }
+        songRatings[trackNum] = input.value;
+        localStorage.setItem(`${pageId}_rating_${trackNum}`, input.value);
+    });
+});
 
 let grandColorPalette;
 let colorFirst;
