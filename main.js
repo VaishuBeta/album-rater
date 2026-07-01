@@ -21,7 +21,7 @@ function makeHTMLpageTemplate(title, cover, artist, year, tracks)
         <td class="table-number">${t.number}. </td>
         <td class="table-title">${escapeHTML(t.title)}</td>
         <td class = "table-rating">
-            <span class = "table-rating-inside">5.0</span>
+            <span class = "table-rating-inside"><input type="text" oninput="if(this.value.length > 3) this.value = this.value.slice(0,3);" class="table-ratings-input" value="0.0" data-track="${t.number}"></span>
         <td>
         <td class = "table-comments"><input type="text" class="table-comments-input" value="No comments." data-track="${t.number}"><td>
         </tr>
@@ -36,7 +36,7 @@ function makeHTMLpageTemplate(title, cover, artist, year, tracks)
 </head>
 <body>
     <span id="blackScreenforTransition"></span>
-    <div id="topBanner">
+    <div id="topBanner" class="no-scrollbar">
     <span id="pageTab">Search</span>
     </div>
     <div id="mainLayout">
