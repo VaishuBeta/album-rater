@@ -1,31 +1,35 @@
+// website starts, just saves time later
 const BASE_URL = "https://musicbrainz.org/ws/2";
 const COVER_URL = "https://coverartarchive.org/release";
-console.log("Hello World!");
-
-/*const HEADERS = {
-    "User-Agent": "VBAlbumRater/1.0"
-};*/
+const ITUNES_BASE_URL = "https://itunes.apple.com";
+const NO_COVER = new URL('../assets/no cover found.png', document.baseURI).href;
 
 window.searchType = "Title";
+window.searchTypeItunes = "Title";
 
 
 async function changeSearchType(type) {
-    const searchInput = document.getElementById("searchInput");
-    const IDInput = document.getElementById("IDInput");
     const inputSpan = document.getElementById("inputType");
 
-    console.log("Entered changeSearchType function. Type: " + type);
-
     if (type === "Title") {
-        console.log("innerHTML is now TITLE");
         inputSpan.innerHTML = `<input type="text" id="searchInput" class="search-input" placeholder="Search for an album..." />`
         window.searchType = "Title";
     } else if (type === "ID") {
-        console.log("innerHTML is now ID");
         inputSpan.innerHTML = `<input type="text" id="IDInput" class="search-input" placeholder="Search by release ID..." />`
         window.searchType = "ID";
     }
+}
 
+async function changeSearchTypeItunes(type) {
+    const inputSpan = document.getElementById("inputTypeItunes");
+
+    if (type === "Title") {
+        inputSpan.innerHTML = `<input type="text" id="searchInputItunes" class="search-input" placeholder="Search for an album..." />`
+        window.searchTypeItunes = "Title";
+    } else if (type === "ID") {
+        inputSpan.innerHTML = `<input type="text" id="IDInputItunes" class="search-input" placeholder="Search by collection ID..." />`
+        window.searchTypeItunes = "ID";
+    }
 }
 
 async function getURLfromType() {
@@ -38,35 +42,55 @@ async function getURLfromType() {
     }
 }
 
+async function getURLfromTypeItunes() {
+    if (window.searchTypeItunes === "Title") {
+        const query = document.getElementById("searchInputItunes").value;
+        return `${ITUNES_BASE_URL}/search?term=${encodeURIComponent(query)}&entity=album&limit=25`;
+    } else if (window.searchTypeItunes === "ID") {
+        const query = document.getElementById("IDInputItunes").value;
+        return `${ITUNES_BASE_URL}/lookup?id=${encodeURIComponent(query)}&entity=album`;
+    }
+}
+
+// Turns an iTunes API result into the same shape renderList/showDetail expect from MusicBrainz
+function normalizeItunesResult(r) {
+    return {
+        title: r.collectionName,
+        id: r.collectionId,
+        date: r.releaseDate,
+        "artist-credit": [{ artist: { name: r.artistName } }],
+        _source: "itunes",
+        _artworkUrl: r.artworkUrl100
+    };
+}
+
+// iTunes gives low-res (100x100) art by default; bump it up
+function getHighResArtwork(url) {
+    if (!url) return null;
+    return url.replace(/\d+x\d+bb/, "600x600bb");
+}
+
 async function searchAlbum() {
-
-    console.log("WINDOW searchType:" + window.searchType);
-
     const url = await getURLfromType();
-    //Try to fetch the data
     try {
         const response = await fetch(url);
-        
-        //Check for error
         if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-
         const data = await response.json();
 
-            if (window.searchType === "ID") {
-                document.getElementById("results").innerHTML = '';
-                showDetail(data);
-                return;
-            }
-            console.log("FETCHED DATA. ENTERING RENDERLIST() FUNCTION");
-            console.log("entering renderlist function with URL:" + url);
-            renderList(data.releases?.slice(0, 10) || []);
+        if (window.searchType === "ID") {
+            document.getElementById("results").innerHTML = '';
+            showDetail(data);
+            return;
+        }
 
-            loadMoreResults = () => {
-                const currentCount = document.getElementById("results").children.length;
-                renderList(data.releases?.slice(0, currentCount + 10) || []);
-            }
-            hiddenButtons.innerHTML = "<button id='loadMoreBtn'>Load More Results</button>";
-            document.getElementById("loadMoreBtn").addEventListener("click", loadMoreResults);
+        renderList(data.releases?.slice(0, 10) || [], "results");
+
+        loadMoreResults = () => {
+            const currentCount = document.getElementById("results").children.length;
+            renderList(data.releases?.slice(0, currentCount + 10) || [], "results");
+        }
+        document.getElementById("hiddenButtons").innerHTML = "<button id='loadMoreBtn'>Load More Results</button>";
+        document.getElementById("loadMoreBtn").addEventListener("click", loadMoreResults);
 
     } catch (error) {
         console.error("Error fetching album data:", error);
@@ -74,28 +98,49 @@ async function searchAlbum() {
     }
 }
 
-function renderList(releases) {
+async function searchAlbumItunes() {
+    const url = await getURLfromTypeItunes();
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+        const data = await response.json();
 
-    console.log("ENTERED RENDERLIST() FUNCTION");
+        const normalized = (data.results || []).map(normalizeItunesResult);
 
-    const list = document.getElementById("results");
+        if (window.searchTypeItunes === "ID") {
+            document.getElementById("resultsItunes").innerHTML = '';
+            if (normalized[0]) showDetail(normalized[0]);
+            return;
+        }
+
+        renderList(normalized.slice(0, 10), "resultsItunes");
+
+        loadMoreResultsItunes = () => {
+            const currentCount = document.getElementById("resultsItunes").children.length;
+            renderList(normalized.slice(0, currentCount + 10), "resultsItunes");
+        }
+        document.getElementById("hiddenButtonsItunes").innerHTML = "<button id='loadMoreBtnItunes'>Load More Results</button>";
+        document.getElementById("loadMoreBtnItunes").addEventListener("click", loadMoreResultsItunes);
+
+    } catch (error) {
+        console.error("Error fetching album data from iTunes:", error);
+        document.getElementById("resultsItunes").textContent = "Error fetching album data. Please try again.";
+    }
+}
+
+// Shared between MusicBrainz and iTunes results — takes a target list id now
+function renderList(releases, listElementId = "results") {
+    const list = document.getElementById(listElementId);
     detailDiv = document.getElementById("detail");
     detailDiv.innerHTML = "";
     list.innerHTML = "";
 
     if (releases.length === 0) {
         list.innerHTML = "<li>No results found.</li>";
-
-        console.log("No results found.");
-
         return;
     }
 
     releases.forEach(release => {
-
-        console.log("Creating release element: " + release.title);
-        console.log("Release: " + release.id);
-
         const li = document.createElement("li");
         const artist = release["artist-credit"]?.[0]?.artist?.name || "Unknown Artist";
         li.innerHTML = `<span class="hover-highlight"><b>${release.title}</b> <span id="subtle"> — ${artist} (${release.date?.slice(0, 4) || "?"})</span></span>`;
@@ -106,20 +151,38 @@ function renderList(releases) {
 }
 
 async function getTracklist(release) {
+    if (release._source === "itunes") {
+        return await getTracklistItunes(release);
+    }
+
     releaseId = release.id;
     const url = `${BASE_URL}/release/${releaseId}?inc=recordings&fmt=json`;
 
     const response = await fetch(url);
     const data = await response.json();
 
-    // media is an array of discs, each disc has a tracks array
     const tracks = data.media?.[0]?.tracks || [];
 
     return tracks.map(track => ({
         number: track.position,
         title: track.title,
-        //length: track.length  // duration in milliseconds
     }));
+}
+
+async function getTracklistItunes(release) {
+    const url = `${ITUNES_BASE_URL}/lookup?id=${release.id}&entity=song`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    // First result in an entity=song lookup is the collection itself; the rest are tracks
+    const tracks = (data.results || []).filter(r => r.wrapperType === "track");
+
+    return tracks
+        .sort((a, b) => (a.trackNumber || 0) - (b.trackNumber || 0))
+        .map(track => ({
+            number: track.trackNumber,
+            title: track.trackName
+        }));
 }
 
 async function showDetail(release) {
@@ -127,14 +190,12 @@ async function showDetail(release) {
     const tracklist = document.getElementById("tracklistPreview");
     const artist = release["artist-credit"]?.[0]?.artist?.name || "Unknown Artist";
     const year = release.date?.slice(0, 4) || "Unknown Year";
+    const altCoverCC = new URL('../assets/alt cover cc.png', document.baseURI).href;
 
-    const hiddenButtons2 = document.getElementById("createPageBtnDiv")
-
-    // Show info immediately, then try to load cover art
     detail.innerHTML = `
         <h2>${release.title}</h2>
         <br>
-        <p id="coverStatus"><img src="../assets/alt cover cc.png" alt="Album cover" style="width:245px; height:245px; object-fit:cover;"></p>
+        <p id="coverStatus"><img src="${altCoverCC}" alt="Album cover" style="width:245px; height:245px; object-fit:cover;"></p>
         <br>
         <p><strong>Artist:</strong> ${artist}</p>
         <p><strong>Year:</strong> ${year}</p>
@@ -142,195 +203,192 @@ async function showDetail(release) {
         <button id='createPage'>Create Page</button>
     `;
 
-    //Fetch tracklist
-    console.log("Rendering tracklist");
     const tracks = await getTracklist(release);
-    const tracklistHTML = tracks.map(t => {
-        return `<li>${t.title}</li>`;
-    }).join("");
+    const tracklistHTML = tracks.map(t => `<li>${t.title}</li>`).join("");
     tracklist.innerHTML = `<h3>Tracklist</h3><ol id="tracklistList">${tracklistHTML}</ol>`;
 
-    // Fetch cover art from Cover Art Archive
-    try {
-        const coverResponse = await fetch(`${COVER_URL}/${release.id}/front`);
-        if (coverResponse.ok) {
-            document.getElementById("coverStatus").innerHTML =
-                `<img src="${COVER_URL}/${release.id}/front" alt="Album Cover" style="width:245px; height:245px; object-fit:cover;">`;
-        } else {
-            document.getElementById("coverStatus").innerHTML =
-                `<img src="../assets/no cover found.png" alt="No Cover Found" style="width:245px; height:245px; object-fit:cover;">`;
+    //smooth scroll
+    window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: 'smooth'
+    });
+
+    //if it's iTunes, get cover art from iTunes, else (meaning it's MusicBrainz) get it from Cover Art Archive
+    if (release._source === "itunes") {
+        const artworkUrl = getHighResArtwork(release._artworkUrl);
+        document.getElementById("coverStatus").innerHTML = artworkUrl
+            ? `<img src="${artworkUrl}" alt="Album Cover" style="width:245px; height:245px; object-fit:cover;">`
+            : `${NO_COVER}" alt="No Cover Found" style="width:245px; height:245px; object-fit:cover;">`;
+    }
+    else {
+        try {
+            const coverResponse = await fetch(`${COVER_URL}/${release.id}/front`);
+            if (coverResponse.ok) {
+                document.getElementById("coverStatus").innerHTML =
+                    `<img src="${COVER_URL}/${release.id}/front" alt="Album Cover" style="width:245px; height:245px; object-fit:cover;">`;
+            } else {
+                document.getElementById("coverStatus").innerHTML =
+                    `<img src="../assets/no cover found.png" alt="No Cover Found" style="width:245px; height:245px; object-fit:cover;">`;
+            }
+        } catch {
+            document.getElementById("coverStatus").textContent = "Could not load cover art.";
         }
-    } catch {
-        document.getElementById("coverStatus").textContent = "Could not load cover art.";
     }
 
-    //Create album page
-    //hiddenButtons2.innerHTML = "<button id='createPage'>Create Page</button>";
+    //create the createPage button listener to move onto the next step
     document.getElementById("createPage").addEventListener("click", () => createAlbumPage(release, artist, year, tracks));
 }
 
-async function createAlbumPage(release, artist, year, tracks)
-{
-    /*const title = album_title_el.value;
-    const content = album_content_el.value;
-    console.log('Button pressed, info recieved. Title: ' + title + ' Content: ' + content);
+//gets details of the album -- performs askPageInfo to get info from user
+async function createAlbumPage(release, artist, year, tracks) {
+    const title = release.title;
+    let cover;
 
-    api.createAlbumPageOld({title, content})
-
-    //Reset values after creating
-    album_title_el.value = "";
-    album_content_el.value = "";*/
-    const title = release.title
-    
-    /*
-    const tracklistHTML = tracks.map(t => {
-        return `<li>${t.title}</li>`;
-    }).join("");
-    */
-
-    //Refer to LINE 131 in ShowDetail function on how to get the cover.
-    //"${COVER_URL}/${release.id}/front"
-    //cover = "https://coverartarchive.org/release/" + release.id + "/front";
-    
-    //ik the try/catch is redundant but idc
-    try {
-    const coverResponse = await fetch(`${COVER_URL}/${release.id}/front`);
-        if (coverResponse.ok) {
-            cover = "https://coverartarchive.org/release/" + release.id + "/front";
-        } else {
-            cover = "../../assets/no cover found.png"
-        }
+    if (release._source === "itunes") {
+        cover = getHighResArtwork(release._artworkUrl) || NO_COVER;
+    } else {
+        try {
+            const coverResponse = await fetch(`${COVER_URL}/${release.id}/front`);
+            if (coverResponse.ok) {
+                cover = "https://coverartarchive.org/release/" + release.id + "/front";
+            } else {
+                cover = NO_COVER;
+            }
+        } catch { cover = NO_COVER; }
     }
-    catch { cover = "../..assets/no cover found.png" }
 
     const sanitizedTitle = title.replace(/[/\\:*?"<>|]/g, '-');
-    let albuminfo = {
-        sanitizedTitle,
-        title,
-        cover,
-        artist,
-        year,
-        tracks
-    };
 
     albuminfo = await askPageInfo(sanitizedTitle, title, artist, year, cover, tracks);
 
-    console.log(stringify(albuminfo));
+    const info = await askPageInfo(sanitizedTitle, title, artist, year, cover, tracks);
 
-    //MAKE FORM TO VERIFY ALL INFO BEFORE CREATION
-    /*
-    formEl = document.createElement('form');
-    formEl.id = "verifyDataBeforeCreationForm";
-    titleInput = document.createElement('input');
-    artistInput = document.createElement('input');
-    titleInput = document.createElement('input');
-    */
-
-    //otherpagesContainer = document.getElementById("goToOtherPages");
-    //otherpagesContainer.innerHTML = `<a href="../albumpages/html/closed captions.html">closed captions</a>`;
-
-    //console.log("Creating album page. INFO: " + JSON.stringify(albuminfo));
-    //api.createAlbumPage(albuminfo)
-    //loadAlbumList()
-
-    //otherpagesContainer.innerHTML += `<li><a href="../albumpages/html/${title}.html">${title}</a></li>`;
-
-    
+    if (info && info.url) {
+        window.location.href = info.url;
+    }
 }
 
 async function loadAlbumList() {
     const filesObj = await api.getAlbumPages();
+    const topBanner = document.getElementById("topBanner");
 
-    albumList = document.getElementById("albumList");
+    topBanner.innerHTML = `<span class="pageTabSearch"><svg xmlns="http://www.w3.org/2000/svg" height="1rem" viewBox="0 -960 960 960" width="1rem" fill="#FFFFFF"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg> Search</span><span class="fakeBorder"></span>`;
 
-    //reset the list so there's no duplicates
-    albumList.innerHTML = '';
-
-    if (filesObj.length === 0) {
-        console.log("No files found in list. RETURNED.");
-        return;
-    }
+    if (filesObj.length === 0) return;
 
     filesObj.forEach(filePair => {
-        const itemCont = document.createElement('li');
         const item = document.createElement('a');
-        
-        item.textContent = filePair.sanitizedTitle;
-        item.href = `../albumpages/html/${filePair.sanitizedTitle}`;
-        console.log("File found and added: " + filePair.title);
+        item.classList.add("pageTab");
+        item.textContent = filePair.sanitizedTitle.replaceAll(".html", "");
+        item.href = filePair.url;
 
-        itemCont.appendChild(item);
-        albumList.appendChild(itemCont);
+        const fakeBorder = document.createElement('span');
+        fakeBorder.classList.add("fakeBorder");
 
+        topBanner.appendChild(item);
+        topBanner.appendChild(fakeBorder);
     })
 }
 
-function askPageInfo(sanitizedTitle, title, artist, year, cover, tracks)
-{
+//ask user for page info -- returns a promise that resolves to the albuminfo object
+function askPageInfo(sanitizedTitle, title, artist, year, cover, tracks) {
+    //initialize all fields
     const sanitizedTitleInput = document.getElementById("sanitizedTitleInput");
     const titleInput = document.getElementById("titleInput");
     const artistInput = document.getElementById("artistInput");
     const yearInput = document.getElementById("yearInput");
     const miniCover = document.getElementById("miniCover");
     const errorMessage = document.getElementById("errorMessage");
-    const createPageAfterValidationBtn = document.getElementById("createPageAfterValidationBtn");
 
+    //connects all values to respective variables (for the pre-filled values)
     sanitizedTitleInput.value = sanitizedTitle;
     titleInput.value = title;
     artistInput.value = artist;
-    if (year != "Unknown Year") {yearInput.value = year;}
-    else {yearInput.value = '';}
+    yearInput.value = (year != "Unknown Year") ? year : '';
 
     document.getElementById("albumInfoForm").style.display = "flex";
-
     miniCover.src = cover;
 
-    //check for special characters in sanitizedTitle, and set a flag to true if so.
+    //checks if user types any banned characters in the sanitized title input field, and if so, displays an error message
     sanitizedTitleInput.addEventListener('input', function() {
-        const currentValue = sanitizedTitleInput.value;
         const specialCharRegex = /[^a-zA-Z0-9_ -]/;
-
-        if (specialCharRegex.test(currentValue)) {
-            errorMessage.textContent = "No special characters allowed in the filename.";
-        } else {
-            errorMessage.textContent = "";
-        }
+        errorMessage.textContent = specialCharRegex.test(sanitizedTitleInput.value)
+            ? "No special characters allowed in the filename." : "";
     })
-    //these lines came from claude
+
+    //i lowk forgot what this does but it makes the button work
     const oldBtn = document.getElementById("createPageAfterValidationBtn");
     const newBtn = oldBtn.cloneNode(true);
     oldBtn.parentNode.replaceChild(newBtn, oldBtn);
 
-
-    return new Promise((resolve) => {
-    newBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            FsanitizedTitle = sanitizedTitleInput.value;
-            Ftitle = titleInput.value;
-            Fartist = artistInput.value;
-            Fyear = yearInput.value;
-            if (FsanitizedTitle && Ftitle && cover && Fartist && Fyear && Fartist)
-            {
-                albuminfo = {
-                    sanitizedTitle: FsanitizedTitle,
-                    title: Ftitle,
-                    cover: cover,
-                    artist: Fartist,
-                    year: Fyear,
-                    tracks: tracks };
-
-                console.log("Creating album page. INFO: " + JSON.stringify(albuminfo));
-                api.createAlbumPage(albuminfo);
-                loadAlbumList();
-                resolve(albuminfo);
-            }
-            else {console.log("Some information is missing in the album page."); resolve(albuminfo);}
-        });
+    //autoscroll
+    window.scrollTo({
+  top: document.body.scrollHeight,
+  behavior: 'smooth'
     });
+
+    //creates the album page with all the collected info
+    //creates the album page with all the collected info
+    return new Promise((resolve) => {
+    newBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const FsanitizedTitle = sanitizedTitleInput.value;
+        const Ftitle = titleInput.value;
+        const Fartist = artistInput.value;
+        const Fyear = yearInput.value;
+
+        if (FsanitizedTitle && Ftitle && cover && Fartist && Fyear) {
+            const albuminfo = { sanitizedTitle: FsanitizedTitle, title: Ftitle, cover: cover, artist: Fartist, year: Fyear, tracks: tracks };
+            const result = await api.createAlbumPage(albuminfo);
+
+            if (result && result.success) {
+                await loadAlbumList();   // now the new album is in the index
+                resolve(result);
+            } else {
+                errorMessage.textContent = "Couldn't save the album page. Check the terminal for errors.";
+            }
+        } else {
+            errorMessage.textContent = "Please fill in every field.";
+        }
+    });
+});
+
 }
 
 loadAlbumList();
 
+function switchSearchMode(mode) {
+
+    //Get the two sections as elements
+    console.log("Search Switch Read: " + mode);
+    const itunesSection = document.getElementById("iTunesSearch");
+    const musicBrainzSection = document.getElementById("musicBrainzSearch");
+
+    //if itunes inputted, close musicbrainz and open itunes, else do the opposite
+    if (mode == "itunes") {
+        console.log("switched iTunes");
+        itunesSection.style.display = "block";
+        musicBrainzSection.style.display = "none";
+    }
+    else if (mode == "musicbrainz") {
+        console.log("switched musicBrainz");
+        itunesSection.style.display = "none";
+        musicBrainzSection.style.display = "block";
+    }
+
+    //itunesSection.style.display = (mode === "itunes") ? "block" : "none";
+    //musicBrainzSection.style.display = (mode === "musicbrainz") ? "block" : "none";
+}
+
+
+// all the event listeners for every button, read the button name and you'll figure it out
+document.getElementById("switchtoiTunes").addEventListener("click", () => switchSearchMode("itunes"));
+document.getElementById("switchtoMusicBrainz").addEventListener("click", () => switchSearchMode("musicbrainz"));
+
 document.getElementById("albumSearchBtn").addEventListener("click", searchAlbum);
 document.getElementById("searchToggleBtn-Title").addEventListener("click", () => changeSearchType("Title"));
-document.getElementById("searchToggleBtn-ID").addEventListener("click",  () => changeSearchType("ID"));
+document.getElementById("searchToggleBtn-ID").addEventListener("click", () => changeSearchType("ID"));
+
+document.getElementById("albumSearchBtnItunes").addEventListener("click", searchAlbumItunes);
+document.getElementById("searchToggleBtn-Title-Itunes").addEventListener("click", () => changeSearchTypeItunes("Title"));
+document.getElementById("searchToggleBtn-ID-Itunes").addEventListener("click", () => changeSearchTypeItunes("ID"));

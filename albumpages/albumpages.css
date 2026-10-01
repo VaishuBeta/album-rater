@@ -208,8 +208,18 @@ h1 {
 }
 
 .table-title {
-    width: 30%;
+    width: 40%;
     padding: 5px 0px;
+}
+
+.table-title-input {
+    font-size: 1rem;
+    background-color: #ffffff00;
+    border: none;
+    color: #ffffff;
+    field-sizing: fixed;
+    width: 100%;
+    font-style: italic;
 }
 
 .table-rating {
@@ -232,7 +242,7 @@ h1 {
     font-weight: light;
     color: #cdcdcd;
     padding: 5px 0px;
-    width: 70%;
+    width: 60%;
 }
 
 .table-comments-input {
@@ -376,7 +386,8 @@ input#yearInput:hover {
     text-align: center;
 }
 
-#editButtonContainer {
+#buttonsContainer {
+    display: block;
     width: 100%;
     margin-left: auto;
     margin-right: auto;
@@ -384,30 +395,118 @@ input#yearInput:hover {
     text-align: center;
 }
 
+#editButtonContainer {
+    display: inline-flex;
+}
+
+#paletteButtonContainer {
+    display: inline-flex;
+}
+
+#exportButtonContainer {
+    display: inline-flex;
+}
+
 .edit-and-update-btn {
-    padding: 0.25rem;
+    /*padding: 0.25rem;*/
+    display: inline-flex;
     cursor: pointer;
     font-size: 1rem;
     border-radius: 6px;
     position: relative;
     top: 0;
-    border-width: 4px;
+    border-width: 2px;
     border-style: solid;
-    width: 6rem;
-    border-color: var(--darkAccentColor);
+    width: 2rem;
+    height: 2rem;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-color: #ffffff40;
     filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.2));
 }
 
 #editBtn {
-    color: var(--darkAccentColor);
+    color: #ffffff40;
     background-color: #ffffff00;
     filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.2));
 
 }
 
+#editButtonIcon {
+    fill: #ffffff40;
+}
+
+#updateButtonIcon{
+    fill: white;
+}
+
 #saveEditsBtn {
     color: white;
     background-color: var(--darkAccentColor);
+}
+
+#exportBtn {
+    /*padding: 0.25rem;*/
+    display: inline-flex;
+    cursor: pointer;
+    font-size: 1rem;
+    border-radius: 6px;
+    position: relative;
+    top: 0;
+    border-width: 2px;
+    border-style: solid;
+    width: 2rem;
+    height: 2rem;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-color: #ffffff40;
+    filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.2));
+
+    color: #ffffff40;
+    background-color: #ffffff00;
+    filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.2));
+}
+
+#exportIcon {
+    fill: #ffffff40;
+}
+
+#paletteBtn {
+    display: inline-flex;
+    cursor: pointer;
+    font-size: 1rem;
+    border-radius: 6px;
+    position: relative;
+    top: 0;
+    border-width: 2px;
+    border-style: solid;
+    width: 2rem;
+    height: 2rem;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-color: #ffffff40;
+    filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.2));
+}
+
+.palette-btn-open {
+    color: #ffffff40;
+    background-color: #ffffff00;
+}
+
+.palette-btn-close {
+    color: white;
+    background-color: var(--darkAccentColor);
+}
+
+#paletteOpenIcon {
+    fill: #ffffff40;
+}
+
+#paletteCloseIcon {
+    fill: white;
 }
 
 /* COLOR PALETTE DIV vvvvvvvvv */
@@ -426,6 +525,7 @@ input#yearInput:hover {
 
 #paletteContainerMaster
 {
+    display: none;
     width: 70%;
     padding: 10px 5px;
     background-color: #00000030;

@@ -8,32 +8,79 @@
 </head>
 
 <body>
-    <h1 id="title">Album Data</h1>
-    <br>
+
+    <div id="topBanner" class="no-scrollbar">
+        <span class="pageTab">Search</span>
+        <span class="fakeBorder"></span>
+    </div>
+
+    <div class="padded-div-main">
 
     <div id="mainLayout">
+    <div class="ImageBGSection">
     <section class="searchSection">
-        <span style="font-size:0.8rem">Search by </span>
-        <b><button id="searchToggleBtn-Title">Title</button></b>
-        <b><button id="searchToggleBtn-ID">Release ID</button></b>
-        <div>
-            <span id="inputType">
-                <input type="text" id="searchInput" class="search-input" placeholder="Search for an album..." />
-            </span>
-        <button id="albumSearchBtn">Search</button>
+        <div id="searchDBSection">
+        <span id="searchBySubTitle">Search by </span>
+            <div>
+                <button id="switchtoiTunes" class="searchModeBtn">iTunes</button>
+                <button id="switchtoMusicBrainz" class="searchModeBtn">MusicBrainz</button>
+                <input type="file" id="importFileInput" accept=".json" style="display:none">
+            </div>
         </div>
 
-        <div id="resultsContainer">
-        <ul id="results"></ul>
-        </div>
+        <section id="musicBrainzSearch" class="typeSearchBox">
 
-        <span id="hiddenButtons"></span>
-    </section>
+            <h1 id="title">MusicBrainz Search</h1>
+            <div id="searchTypeSection">
+                <span style="font-size:0.8rem">Search by </span>
+                <b><button id="searchToggleBtn-Title" class="searchTypeBtn">Title</button></b>
+                <b><button id="searchToggleBtn-ID" class="searchTypeBtn">Release ID</button></b>
+                <div>
+                    <span id="inputType">
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search for an album..." />
+                    </span>
+                <button id="albumSearchBtn" class="searchBtn">Search</button>
+            </div>
+            </div>
+
+            <div id="resultsContainer">
+            <ul id="results"></ul>
+            </div>
+
+            <span id="hiddenButtons"></span>
+        </section>
+
+        <section id="iTunesSearch" class="typeSearchBox">
+            <h1 id="title">iTunes Search</h1>
+
+            <div id="searchTypeSection">
+                <span style="font-size:0.8rem">Search by </span>
+                <b><button id="searchToggleBtn-Title-Itunes" class="searchTypeBtn">Title</button></b>
+                <b><button id="searchToggleBtn-ID-Itunes" class="searchTypeBtn">Collection ID</button></b>
+                <div>
+                    <span id="inputTypeItunes">
+                        <input type="text" id="searchInputItunes" class="search-input" placeholder="Search for an album..." />
+                    </span>
+                    <button id="albumSearchBtnItunes" class="searchBtn">Search</button>
+                </div>
+            </div>
+
+            <div id="resultsContainerItunes">
+                <ul id="resultsItunes"></ul>
+            </div>
+
+            <span id="hiddenButtonsItunes"></span>
+        </section>
+    </div>
+
+    <br>
 
     <section class="albumInfo">
         <div id="detail"></div>
         <div id="createPageBtnDiv"></div>
         <div id="tracklistPreview"></div>
+    </section>
+
     </section>
 
     <div id="hiddenLoadAlbum"></div>
@@ -62,6 +109,8 @@
             <button id="createPageAfterValidationBtn">Confirm</button>
         </form>
         </div>
+
+    </div>
 
     </div>
 </body>
