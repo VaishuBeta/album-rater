@@ -16,6 +16,14 @@ In %appdata%/rater, find albumpages/index.json and clear it's contents. Then, fi
 
 The program is very simple to use. After booting up the application, all controls will be made obvious. Only a mouse and keyboard is needed to operate the app.
 
+# Features
+
+- 2-API album search
+- Automatic color palette identification
+- Customizable 2-tone page themes using album colors
+- Rate songs 0-10, and provide comments
+- Export a page as JSON, to use elsewhere
+
 # Other details
 
 - License: MIT License
