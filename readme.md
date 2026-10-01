@@ -18,8 +18,11 @@ The program is very simple to use. After booting up the application, all control
 
 # Other details
 
-License: MIT License
-Developed by VaishuBeta on GitHub
-Submitted for Hack Club Stardance
-Created on Electron
-v1.0.0
+- License: MIT License
+- Developed by VaishuBeta on GitHub
+- Submitted for Hack Club Stardance
+- Created on Electron
+- v1.0.0
+- AI used for debugging and some menial functions (luminance, etc.)
+- All other work done by me
+- Uses iTunes and MusicBrainz API Search
